@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Job Quest
 
-## Getting Started
+A premium, industry-grade job application tracker designed for high-performance engineering roles. Featuring a state-of-the-art glassmorphism UI and a robust Postgres-backed data layer.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Dashboard**: High-fidelity overview of active applications with real-time status tracking.
+- **Conversion Funnel**: Integrated analytics to monitor interview and offer conversion rates.
+- **Weekly Velocity**: Interactive bar charts (via Recharts) to track application frequency.
+- **90-Day Execution Plan**: Strategic goal tracking to maintain application momentum.
+- **Resume Audit System**: Dedicated tracking for resume optimizations and mission-critical fixes.
+- **Feature-Driven Architecture**: Decoupled, modular folder structure for scalability.
+
+## 🛠 Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, Recharts
+- **Runtime**: [Bun](https://bun.sh/)
+- **Database**: Neon Serverless Postgres
+- **ORM**: Prisma (v5.21+)
+- **Styling**: Vanilla CSS with Design Tokens (Glassmorphism)
+- **Language**: TypeScript (Strict Mode)
+
+## 📂 Project Structure
+
+```text
+src/
+├── app/                  # Next.js App Router (Pages & API Handlers)
+├── features/             # Feature-driven modules
+│   └── jobs/             # Job tracking domain logic (Hooks, Services, Components)
+├── shared/               # Reusable UI components and design tokens
+│   ├── components/       # Pane, StatBlock, StatusBadge, etc.
+│   └── theme/            # Centralized visual configuration (T-object)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏁 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Prerequisites
+Ensure you have **Bun** installed on your system.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. Environment Setup
+Copy the example environment file and provide your **Neon Database URL**:
+```bash
+cp .env.example .env
+# Edit .env and set DATABASE_URL
+```
 
-## Learn More
+### 3. Installation
+```bash
+bun install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Database Initialization
+Synchronize the schema and generate the client:
+```bash
+bunx prisma db push
+bunx prisma generate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. Launch
+```bash
+bun run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📜 Scripts
 
-## Deploy on Vercel
+| Command | Action |
+| :--- | :--- |
+| `bun run dev` | Starts the development server |
+| `bun run build` | Generates a production-ready build |
+| `bun run lint` | Runs ESLint for code quality checks |
+| `bunx prisma studio` | Opens the Prisma database GUI |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+**Built for the Deep-Tech Empire by [Mayank Pratap Singh](https://steeltroops.vercel.app)**
