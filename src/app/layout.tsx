@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,7 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://job-quest.vercel.app"),
   title: "Job Quest | The Ultimate Job Application Tracker",
   description: "Take control of your career search with Job Quest. Organize applications, track your progress, and land your next role with scientific precision.",
   keywords: ["job tracker", "career journey", "application management", "job quest", "professional growth", "recruitment tracker"],
@@ -46,7 +53,6 @@ export const metadata: Metadata = {
     shortcut: "/icon.png",
     apple: "/icon.png",
   },
-  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
