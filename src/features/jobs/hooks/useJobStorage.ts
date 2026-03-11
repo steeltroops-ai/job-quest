@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { JobApplication } from "../types";
+import { JobApplication, GoalTask } from "../types";
 
 export function useJobStorage() {
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [goal, setGoal] = useState<number>(5);
+  const [goalTasks, setGoalTasks] = useState<GoalTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchJobs = async () => {
@@ -30,8 +31,20 @@ export function useJobStorage() {
     }
   };
 
+  const fetchGoalTasks = async () => {
+    try {
+      const res = await fetch("/api/goal-tasks");
+      if (res.ok) {
+        const data = await res.json();
+        setGoalTasks(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch goal tasks", err);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([fetchJobs(), fetchGoal()]).finally(() => setLoading(false));
+    Promise.all([fetchJobs(), fetchGoal(), fetchGoalTasks()]).finally(() => setLoading(false));
   }, []);
 
   const addOrUpdateApp = async (app: JobApplication) => {
@@ -104,13 +117,60 @@ export function useJobStorage() {
     }
   };
 
+  const toggleGoalTask = async (task: GoalTask) => {
+    const updated = { ...task, done: !task.done };
+    setGoalTasks(prev => prev.map(t => t.id === task.id ? updated : t));
+
+    try {
+      await fetch(`/api/goal-tasks/${task.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
+  };
+
+  const addGoalTask = async (task: Partial<GoalTask>) => {
+    try {
+      const res = await fetch("/api/goal-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(task),
+      });
+
+      if (res.ok) {
+        const saved = await res.json();
+        setGoalTasks(prev => [...prev, saved]);
+      }
+    } catch (err) {
+      console.error("Failed to add goal task", err);
+    }
+  };
+
+  const deleteGoalTask = async (id: number) => {
+    try {
+      const res = await fetch(`/api/goal-tasks/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setGoalTasks(prev => prev.filter(t => t.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete goal task", err);
+    }
+  };
+
   return {
     apps,
     goal,
+    goalTasks,
     loading,
     addOrUpdateApp,
     deleteApp,
     updateAppStatus,
-    updateGoal
+    updateGoal,
+    toggleGoalTask,
+    addGoalTask,
+    deleteGoalTask
   };
 }

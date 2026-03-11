@@ -34,6 +34,17 @@ model JobApplication {
 }
 
 model Goal {
-  id    Int @id @default(autoincrement())
-  count Int @default(5)
+  id     Int    @id @default(autoincrement())
+  count  Int    @default(5)
+  target String @default("Weekly Applications")
+}
+
+model GoalTask {
+  id        Int      @id @default(autoincrement())
+  text      String
+  note      String?
+  done      Boolean  @default(false)
+  category  String   @default("Execution") // e.g., "Execution", "Audit"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

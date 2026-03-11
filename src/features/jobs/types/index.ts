@@ -23,5 +23,19 @@ export interface JobApplication {
   updatedAt?: string | Date;
 }
 
+export interface Goal {
+  id: number;
+  count: number;
+  target: string;
+}
+
+export interface GoalTask {
+  id: number;
+  text: string;
+  note?: string | null;
+  done: boolean;
+  category: string;
+}
+
 export type SortByOptions = "date" | "company";
 export type TabState = "tracker" | "kanban" | "stats" | "goals";
