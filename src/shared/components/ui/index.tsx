@@ -1,12 +1,41 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { T } from "../../../shared/theme";
 import { STATUS_CONFIG } from "../../../features/jobs/constants";
 
-export function Pane({ children, style = {}, pad = "20px 22px", radius = 14 }: { children: React.ReactNode; style?: React.CSSProperties; pad?: string; radius?: number }) {
+export function Pane({ children, style = {}, pad = "24px 26px", radius = 20 }: { children: React.ReactNode; style?: React.CSSProperties; pad?: string; radius?: number }) {
   return (
     <div className="pane" style={{ borderRadius: radius, padding: pad, ...style }}>
-      <div className="pane-sheen" style={{ borderRadius: radius }} />
+      <div className="pane-sheen" />
       <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
+    </div>
+  );
+}
+
+export function Select({ value, onChange, options, style = {} }: { value: string; onChange: (val: string) => void; options: string[]; style?: React.CSSProperties }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const click = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    window.addEventListener("mousedown", click);
+    return () => window.removeEventListener("mousedown", click);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%", ...style }}>
+      <div onClick={() => setOpen(!open)} style={{ ...inputStyles, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"} onMouseOut={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}>
+        <span style={{ color: options.includes(value) ? T.text1 : T.text3, fontSize: 13, fontWeight: 500 }}>{value}</span>
+        <span style={{ fontSize: 9, transform: open ? "rotate(180deg)" : "none", transition: "0.2s", color: T.text4 }}>▼</span>
+      </div>
+      {open && (
+        <div className="pane pane-elevated" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 1000, padding: 6, maxHeight: 260, overflowY: "auto", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(30px) saturate(200%)" }}>
+          {options.map(o => (
+            <div key={o} onClick={() => { onChange(o); setOpen(false); }} className="trow" style={{ padding: "10px 14px", fontSize: 13, borderRadius: 10, background: o === value ? "rgba(255,255,255,0.1)" : "transparent", color: o === value ? "#FFF" : T.text2, marginBottom: 2 }}>
+              {o}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -75,9 +104,12 @@ export function StatBlock({ label, value, sub, color = T.text1, accent }: { labe
 }
 
 export const inputStyles = {
-  width: "100%", background: T.g3, border: `1px solid ${T.rim}`, borderRadius: 8,
-  padding: "9px 12px", color: T.text1, fontSize: 12, fontFamily: T.sans,
-  outline: "none", boxSizing: "border-box" as const, transition: "border-color 0.15s, background 0.15s"
+  width: "100%", background: "rgba(20,20,25,0.45)", border: `1px solid rgba(255,255,255,0.12)`, 
+  borderRadius: 12,
+  padding: "11px 16px", color: T.text1, fontSize: 13, fontFamily: T.sans,
+  outline: "none", boxSizing: "border-box" as const, transition: "all 0.2s ease",
+  backdropFilter: "blur(10px)",
+  boxShadow: "inset 0 1px 1px rgba(255,255,255,0.05)"
 };
 
 export const labelStyles = {

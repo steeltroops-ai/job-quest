@@ -16,7 +16,11 @@ import {
 } from "@/features/jobs/utils";
 
 export default function JobTracker() {
-  const { apps, goal, loading, addOrUpdateApp, deleteApp, updateAppStatus, updateGoal } = useJobStorage();
+  const { 
+    apps, goal, goalTasks, loading, 
+    addOrUpdateApp, deleteApp, updateAppStatus, 
+    updateGoal, toggleGoalTask, addGoalTask, deleteGoalTask 
+  } = useJobStorage();
   
   const [showForm, setShowForm] = React.useState(false);
   const [editApp, setEditApp] = React.useState<JobApplication | null>(null);
@@ -50,11 +54,14 @@ export default function JobTracker() {
   if (loading) return <div style={{ minHeight: "100vh", background: T.bg }} />;
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.sans, color: T.text1, boxSizing: "border-box" }}>
+    <div style={{ minHeight: "100vh", background: "#050507", fontFamily: T.sans, color: T.text1, boxSizing: "border-box", position: "relative" }}>
       <style>{GlobalStyles}</style>
 
-      <div className="root-bg" style={{ minHeight: "100vh", padding: "24px 20px" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+      <div className="moving-lattice" />
+      <div className="topo-overlay" />
+
+      <div className="root-bg" style={{ minHeight: "100vh", padding: "24px 2vw", position: "relative", zIndex: 2, background: "transparent" }}>
+        <div className="main-container">
           
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
             <div>
@@ -136,6 +143,7 @@ export default function JobTracker() {
                  setEditApp(app);
                  setShowForm(true);
                }}
+               onUpdateFull={addOrUpdateApp}
             />
           )}
 
@@ -195,6 +203,10 @@ export default function JobTracker() {
               submitted={submitted}
               goal={goal}
               wkApps={wkApps}
+              tasks={goalTasks}
+              onToggleTask={toggleGoalTask}
+              onAddTask={addGoalTask}
+              onDeleteTask={deleteGoalTask}
             />
           )}
         </div>

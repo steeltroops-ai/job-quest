@@ -2,28 +2,34 @@
 import React, { useState, useMemo } from "react";
 import { JobApplication, SortByOptions } from "@/features/jobs/types";
 import { daysAgo, isStale } from "@/features/jobs/utils";
-import { STATUSES, REGIONS, STATUS_CONFIG } from "@/features/jobs/constants";
+import { STATUSES, REGIONS, STATUS_CONFIG, createEmptyApplication } from "@/features/jobs/constants";
 import { T } from "@/shared/theme";
-import { Pane, StatusBadge, Label, MetaVal } from "@/shared/components/ui";
+import { Pane, StatusBadge, Label, MetaVal, inputStyles, Select } from "@/shared/components/ui";
 
 interface TrackerTableProps {
   apps: JobApplication[];
   onUpdateStatus: (id: number, status: string) => void;
   onEdit: (app: JobApplication) => void;
   onDelete: (id: number) => void;
+  onUpdateFull?: (app: JobApplication) => void;
 }
 
-export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete }: TrackerTableProps) {
+export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete, onUpdateFull }: TrackerTableProps) {
   const [search, setSearch] = useState("");
   const [regionF, setRegionF] = useState("Any");
   const [sortBy, setSortBy] = useState<SortByOptions>("date");
   const [statusF, setStatusF] = useState("All");
   const [expanded, setExpanded] = useState<number | null>(null);
 
-  const inp = {
-    width:"100%", background:T.g3, border:`1px solid ${T.rim}`, borderRadius:8,
-    padding:"9px 12px", color:T.text1, fontSize:12, fontFamily:T.sans,
-    outline:"none", boxSizing:"border-box" as const, transition:"border-color 0.15s, background 0.15s"
+  // Quick Add State
+  const [quickAdd, setQuickAdd] = useState({ company: "", role: "", status: "Applied" });
+
+  const inp = { ...inputStyles, padding: "8px 14px", fontSize: 13, background: "rgba(255,255,255,0.06)", backdropFilter: "blur(12px)" };
+
+  const cellInput = {
+    background: "transparent", border: "none", color: "inherit", 
+    fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", 
+    outline: "none", width: "100%", padding: "2px 0", cursor: "text"
   };
 
   const filtered = useMemo(() => apps
@@ -33,18 +39,25 @@ export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete }: Tracker
     .sort((a, b) => sortBy === "date" ? new Date(b.date).getTime() - new Date(a.date).getTime() : a.company.localeCompare(b.company)),
   [apps, statusF, regionF, search, sortBy]);
 
+  const handleQuickAdd = () => {
+    if (!quickAdd.company.trim() || !quickAdd.role.trim() || !onUpdateFull) return;
+    const newApp = { ...createEmptyApplication(), company: quickAdd.company, role: quickAdd.role, status: quickAdd.status, date: new Date().toISOString().slice(0, 10) } as JobApplication;
+    onUpdateFull(newApp);
+    setQuickAdd({ company: "", role: "", status: "Applied" });
+  };
+
+  const handleInlineChange = (app: JobApplication, field: keyof JobApplication, value: string) => {
+    if (!onUpdateFull) return;
+    onUpdateFull({ ...app, [field]: value });
+  };
+
   return (
     <div>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <input placeholder="Search company, role, tag..." value={search} onChange={e => setSearch(e.target.value)}
           style={{ ...inp, flex: 1, minWidth: 180 }} />
-        <select value={regionF} onChange={e => setRegionF(e.target.value)} style={{ ...inp, width: 130, flex: "none" }}>
-          {REGIONS.map(r => <option key={r}>{r}</option>)}
-        </select>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value as SortByOptions)} style={{ ...inp, width: 130, flex: "none" }}>
-          <option value="date">Newest first</option>
-          <option value="company">By company</option>
-        </select>
+        <Select value={regionF} onChange={val => setRegionF(val)} options={REGIONS} style={{ width: 140 }} />
+        <Select value={sortBy} onChange={val => setSortBy(val as SortByOptions)} options={["date", "company"]} style={{ width: 140 }} />
       </div>
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 16 }}>
         {["All", ...STATUSES].map(s => {
@@ -59,12 +72,22 @@ export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete }: Tracker
       </div>
 
       <Pane pad="0" style={{ overflow: "visible" }}>
-        <div className="grid-r" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 75px 75px 100px 120px", gap: 8, padding: "12px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="trow-grid" style={{ padding: "12px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           {["Company", "Role", "Region", "Age", "Resume", "Status"].map((h, i) => (
             <Label key={h} style={{ marginBottom: 0, ...(i > 1 && i < 4 ? { display: "none" } : i === 2 || i === 3 ? {} : {}) }} className={i === 2 || i === 3 ? "hide-sm" : ""}>{h}</Label>
           ))}
         </div>
         
+        {/* Quick Add Row */}
+        <div className="trow-grid" style={{ padding: "8px 18px", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)" }}>
+          <div><input placeholder="New Company..." value={quickAdd.company} onChange={e => setQuickAdd(p => ({...p, company: e.target.value}))} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={{ ...cellInput, fontSize: 13, fontWeight: 700, color: T.text1 }} /></div>
+          <div><input placeholder="Role..." value={quickAdd.role} onChange={e => setQuickAdd(p => ({...p, role: e.target.value}))} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={{ ...cellInput, fontSize: 12, color: T.text2 }} /></div>
+          <div className="hide-sm" style={{ fontSize: 10, color: T.text4, fontFamily: T.mono }}>—</div>
+          <div className="hide-sm" style={{ fontSize: 10, color: T.text4, fontFamily: T.mono }}>0d</div>
+          <div style={{ fontSize: 10, color: T.text4, fontFamily: T.mono }}>—</div>
+          <Select value={quickAdd.status} onChange={val => { setQuickAdd(p => ({...p, status: val})); setTimeout(handleQuickAdd, 50); }} options={STATUSES} style={{ height: "100%", padding: 0 }} />
+        </div>
+
         {filtered.length === 0 ? (
           <div style={{ padding: "60px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.15 }}>○</div>
@@ -77,22 +100,19 @@ export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete }: Tracker
             const open = expanded === app.id;
             return (
               <div key={app.id}>
-                <div className="trow" onClick={() => setExpanded(open ? null : app.id)}
-                  style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 75px 75px 100px 120px", gap: 8, padding: "13px 18px", alignItems: "center", background: stale ? "rgba(255,59,48,0.03)" : "transparent" }}>
-                  <div style={{ overflow: "hidden" }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {app.company}
-                      {stale && <span style={{ fontSize: 9, color: T.red, marginLeft: 7, fontFamily: T.mono, fontWeight: 700 }}>STALE</span>}
-                    </div>
+                <div className="trow trow-grid" style={{ padding: "13px 18px", background: stale ? "rgba(255,59,48,0.03)" : "transparent" }}>
+                  <div style={{ overflow: "hidden", display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: "rgba(255,255,255,0.2)", cursor: "pointer", flexShrink: 0 }} onClick={() => setExpanded(open ? null : app.id)} />
+                    <input value={app.company} onChange={e => handleInlineChange(app, "company", e.target.value)} style={{ ...cellInput, fontWeight: 700, fontSize: 13, color: T.text1 }} />
+                    {stale && <span style={{ fontSize: 9, color: T.red, fontFamily: T.mono, fontWeight: 700 }}>STALE</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {app.role}
-                    {app.round && <span style={{ fontSize: 10, color: T.text4, marginLeft: 6, fontFamily: T.mono }}>· {app.round}</span>}
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <input value={app.role} onChange={e => handleInlineChange(app, "role", e.target.value)} style={{ ...cellInput, fontSize: 12, color: T.text2 }} />
                   </div>
                   <div className="hide-sm" style={{ fontSize: 10, color: T.text4, fontFamily: T.mono }}>{app.region || "—"}</div>
                   <div className="hide-sm" style={{ fontSize: 10, fontFamily: T.mono, color: days != null && days > 30 ? T.red : days != null && days > 14 ? "rgba(255,159,10,0.8)" : T.text4 }}>{days != null ? `${days}d` : "—"}</div>
                   <div style={{ fontSize: 10, color: T.blue, fontFamily: T.mono, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.resume || "—"}</div>
-                  <StatusBadge status={app.status} />
+                  <Select value={app.status} onChange={val => onUpdateStatus(app.id, val)} options={STATUSES} style={{ fontSize: 10, fontWeight: 600, fontFamily: T.mono }} />
                 </div>
 
                 {open && (
@@ -138,7 +158,7 @@ export function TrackerTable({ apps, onUpdateStatus, onEdit, onDelete }: Tracker
                           )})}
                         </div>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button className="btn-ghost" style={{ fontSize: 11 }} onClick={e => { e.stopPropagation(); onEdit(app); }}>Edit</button>
+                          <button className="btn-ghost" style={{ fontSize: 11 }} onClick={e => { e.stopPropagation(); onEdit(app); }}>Advanced Edit</button>
                           <button onClick={e => { e.stopPropagation(); onDelete(app.id); }} style={{ background: "transparent", border: `1px solid rgba(255,59,48,0.22)`, borderRadius: 8, padding: "7px 14px", color: T.red, fontSize: 11, cursor: "pointer", fontFamily: T.sans, fontWeight: 600 }}>Delete</button>
                         </div>
                       </div>
